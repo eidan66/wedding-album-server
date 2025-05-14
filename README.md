@@ -1,114 +1,178 @@
-# Wedding Album Server
+# 📸 Wedding Album Server
 
-A lightweight backend server for handling wedding photo uploads directly to AWS S3 using pre-signed URLs.
+Lightweight backend server for handling secure wedding photo and video uploads using pre-signed URLs and AWS S3.
 
-## Features
+---
 
-- Secure direct-to-S3 uploads using pre-signed URLs
-- File type validation (JPEG, PNG, GIF)
-- File size limits (10MB max)
-- CORS support for frontend integration
-- Health check endpoint for uptime monitoring
+## 🚀 Features
 
-## Prerequisites
+- 🔐 Direct-to-S3 uploads with pre-signed URLs
+- 🧪 File validation (MIME types + size limits)
+- 🎞️ Support for images and videos
+- 🔁 Pagination-based photo retrieval
+- 🌐 CORS support for frontend integration
+- 🩺 Health check for uptime monitoring
 
-- Node.js 16+
-- Yarn package manager
-- AWS account with S3 bucket
-- AWS credentials with appropriate permissions
+---
 
-## Setup
+## 📦 Prerequisites
 
-1. Clone the repository:
+- Node.js 22+
+- Yarn
+- AWS account with:
+  - S3 Bucket
+  - IAM credentials with `PutObject`, `ListBucket`
+- Basic knowledge of environment variables
+
+---
+
+## ⚙️ Setup
+
 ```bash
 git clone <repository-url>
 cd wedding-album-server
-```
-
-2. Install dependencies:
-```bash
 yarn install
-```
-
-3. Create a `.env` file based on `.env.example`:
-```bash
 cp .env.example .env
 ```
 
-4. Configure your environment variables in `.env`:
-```
+Edit `.env` with your credentials:
+
+```env
 AWS_ACCESS_KEY_ID=your_access_key_id
 AWS_SECRET_ACCESS_KEY=your_secret_access_key
 AWS_REGION=your_region
 S3_BUCKET_NAME=your_bucket_name
 PORT=3000
-ALLOWED_ORIGINS=http://localhost:3000,https://your-frontend-domain.com
+ALLOWED_ORIGINS=http://localhost:3000,https://your-frontend.com
 ```
 
-5. Configure your S3 bucket:
-   - Create a bucket in AWS S3
-   - Set up CORS configuration
-   - Apply the provided bucket policy
+---
 
-## Development
+## 🧑‍💻 Development
 
-Start the development server:
 ```bash
 yarn dev
 ```
 
-## Production
+## 🏁 Production
 
-Build the project:
 ```bash
 yarn build
-```
-
-Start the production server:
-```bash
 yarn start
 ```
 
-## API Endpoints
+---
 
-### Generate Upload URL
+## 🔌 API Reference
+
+### ✅ Health Check
+
+```http
+GET /api/ping
 ```
+
+Returns:
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2025-05-14T18:00:00.000Z"
+}
+```
+
+---
+
+### 📤 Generate Pre-signed Upload URL
+
+```http
 POST /api/upload-url
 ```
 
-Request body:
+**Request Body:**
+
 ```json
 {
-  "filename": "photo.jpg",
+  "filename": "IMG_1234.jpg",
   "filetype": "image/jpeg",
   "filesize": 2048000
 }
 ```
 
-Response:
+**Response:**
+
 ```json
 {
-  "url": "https://s3.amazonaws.com/your-bucket-name/wedding-uploads/...",
-  "key": "wedding-uploads/unique-filename.jpg"
+  "url": "https://your-bucket.s3.amazonaws.com/wedding-uploads/...",
+  "key": "wedding-uploads/uuid.jpg"
 }
 ```
 
-### Health Check
-```
-GET /api/ping
-```
+**Error Example:**
 
-Response:
 ```json
 {
-  "status": "ok",
-  "timestamp": "2024-03-21T12:00:00.000Z"
+  "code": "UNSUPPORTED_FILE_TYPE",
+  "message": "Invalid file type. Only images and videos are allowed."
 }
 ```
 
-## S3 Bucket Policy
+---
 
-Apply this policy to your S3 bucket:
+### 📥 Get Uploaded Album Items (Paginated)
+
+```http
+GET /api/download?page=1&limit=10
+```
+
+**Query Parameters:**
+
+| Param | Type   | Description                  |
+|-------|--------|------------------------------|
+| page  | number | Page number (default: `1`)   |
+| limit | number | Items per page (default: `10`) |
+
+**Response:**
+
+```json
+{
+  "items": [
+    {
+      "id": "a1b2c3d4.jpeg",
+      "url": "https://s3.amazonaws.com/your-bucket/wedding-uploads/a1b2c3d4.jpeg",
+      "type": "image"
+    },
+    {
+      "id": "v9f8e7.mov",
+      "url": "https://s3.amazonaws.com/your-bucket/wedding-uploads/v9f8e7.mov",
+      "type": "video"
+    }
+  ],
+  "page": 1,
+  "limit": 10,
+  "total": 42,
+  "hasMore": true
+}
+```
+
+---
+
+## 🪣 S3 Configuration
+
+### ✅ CORS (example config):
+
+```xml
+<CORSConfiguration>
+  <CORSRule>
+    <AllowedOrigin>*</AllowedOrigin>
+    <AllowedMethod>PUT</AllowedMethod>
+    <AllowedMethod>POST</AllowedMethod>
+    <AllowedMethod>GET</AllowedMethod>
+    <AllowedHeader>*</AllowedHeader>
+  </CORSRule>
+</CORSConfiguration>
+```
+
+### ✅ Bucket Policy (Pre-signed Uploads Only)
 
 ```json
 {
@@ -121,7 +185,7 @@ Apply this policy to your S3 bucket:
       "Action": "s3:PutObject",
       "Resource": "arn:aws:s3:::your-bucket-name/wedding-uploads/*",
       "Condition": {
-        "NumericLessThanEquals": { "s3:content-length": 10485760 },
+        "NumericLessThanEquals": { "s3:content-length": 367001600 },
         "StringEquals": { "s3:x-amz-acl": "public-read" }
       }
     }
@@ -129,12 +193,15 @@ Apply this policy to your S3 bucket:
 }
 ```
 
-## Keeping the Server Alive (Free Tier)
+---
 
-For the free tier on Render, set up a ping service to hit the `/api/ping` endpoint every 5-10 minutes using:
-- https://cron-job.org
-- https://uptimerobot.com
+## 🔄 Keep Alive on Free Tier (Render)
 
-## License
+Use services like:
+- [cron-job.org](https://cron-job.org/)
+- [uptimerobot.com](https://uptimerobot.com/)
 
-ISC 
+Ping every 5–10 minutes:
+```http
+GET https://<your-domain>/api/ping
+```
