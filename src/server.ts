@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import uploadRouter from './routes/upload';
 import downloadRouter from './routes/download';
+import mediaRouter from './routes/media';
 
 // Load environment variables
 dotenv.config();
@@ -30,6 +31,7 @@ app.use(express.json());
 // Routes
 app.use('/api', uploadRouter);
 app.use('/api/download', downloadRouter);
+app.use('/api/media', mediaRouter);
 
 
 // Error handling middleware
