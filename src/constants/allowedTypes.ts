@@ -6,6 +6,7 @@ export const allowedTypes = [
     'image/heic',
     'image/heif',      
     'image/avif',      
+    'image/svg+xml', // Added support for SVG files
     'video/mp4',
     'video/mov',
     'video/quicktime',

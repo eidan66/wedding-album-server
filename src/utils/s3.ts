@@ -85,12 +85,12 @@ export const listUploadedFiles = async (): Promise<AlbumItem[]> => {
   const items: AlbumItem[] = sorted.map((item) => {
     const key = item.Key!;
     const url = `${baseUrl}${key}`;
-    const id = key.split('/').pop() ?? key;
+    const id = key;
     const ext = id.split('.').pop()?.toLowerCase() ?? '';
 
     const type: AlbumItem['type'] = videoExtensions.includes(ext) ? 'video' : 'image';
 
-    return { id, url, type };
+    return { id, url, type, created_date: item.LastModified?.toISOString() };
   });
 
   return items;
