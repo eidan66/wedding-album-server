@@ -1,6 +1,5 @@
 import { Router, Request, Response } from 'express';
 import { S3Client, CopyObjectCommand } from '@aws-sdk/client-s3';
-import { writeMetadata } from '../utils/s3';
 
 const router = Router();
 
@@ -17,31 +16,19 @@ router.post('/', async (req: Request, res: Response) => {
   try {
     const { media_url, title, media_type, uploader_name } = req.body; // Data sent from the client
 
-    console.log('Received media item data:', { media_url, title, media_type, uploader_name });
+    console.log('Received media item data (S3 metadata based):', { media_url, title, media_type, uploader_name });
 
-    // Extract S3 key from media_url (assuming a specific URL structure)
-    const urlParts = media_url.split('/');
-    const s3Key = urlParts.slice(urlParts.indexOf('wedding-uploads')).join('/');
+    // Assuming the metadata is already set on the S3 object during the initial upload
+    // This endpoint now only serves to acknowledge the frontend that the item has been "processed"
+    // (i.e., its upload URL was generated and the upload to S3 was completed by the client).
 
-    if (!s3Key) {
-        return res.status(400).json({ message: 'Invalid media_url provided' });
-    }
+    // Optionally, if you need to perform any backend-specific actions after upload, do it here.
+    // For now, we'll just send a success response.
 
-    // Store metadata in a JSON file in S3
-    await writeMetadata({
-        [s3Key]: {
-            title: title || '',
-            uploader_name: uploader_name || '',
-            media_type: media_type,
-            media_url: media_url.split('?')[0],
-            created_date: new Date().toISOString() // Add creation date
-        }
-    });
-
-    res.status(201).json({ message: 'Media item metadata saved', key: s3Key });
+    res.status(201).json({ message: 'Media item successfully processed', media_url: media_url.split('?')[0] });
   } catch (error) {
-    console.error('Error saving media item metadata:', error);
-    res.status(500).json({ message: 'Failed to save media item metadata' });
+    console.error('Error processing media item:', error);
+    res.status(500).json({ message: 'Failed to process media item' });
   }
 });
 
