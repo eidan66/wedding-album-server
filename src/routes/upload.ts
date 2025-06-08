@@ -8,11 +8,13 @@ interface UploadRequest {
   filename: string;
   filetype: string;
   filesize: number;
+  title?: string;
+  uploaderName?: string;
 }
 
 router.post('/upload-url', async (req: Request, res: Response) => {
   try {
-    const { filename, filetype, filesize } = req.body as UploadRequest;
+    const { filename, filetype, filesize, title, uploaderName } = req.body as UploadRequest;
 
     // Validate required fields
     if (!filename || !filetype || !filesize) {
@@ -21,7 +23,7 @@ router.post('/upload-url', async (req: Request, res: Response) => {
       });
     }
 
-    const result = await generateUploadUrl(filename, filetype, filesize);
+    const result = await generateUploadUrl(filename, filetype, filesize, title, uploaderName);
     res.json(result);
   } catch (error) {
     console.error('Error generating upload URL:', error);
